@@ -156,6 +156,30 @@ const LS={
   set(k,v){try{localStorage.setItem('ai3_'+k,JSON.stringify(v))}catch{}},
 };
 
+const DEFAULT_WRONG_SETTINGS={correctToRemove:2};
+
+function normalizeWrongSettings(raw){
+  const v=Number(raw&&raw.correctToRemove);
+  return{
+    correctToRemove:Number.isFinite(v)&&v>=0?Math.floor(v):DEFAULT_WRONG_SETTINGS.correctToRemove
+  };
+}
+
+function normalizeWrongItem(raw){
+  const item=raw&&typeof raw==='object'?raw:{};
+  const ts=Math.max(0,Number(item.ts)||Date.now());
+  return{
+    ...item,
+    count:Math.max(1,Number(item.count)||1),
+    correctStreak:Math.max(0,Number(item.correctStreak)||0),
+    reviewCorrectCount:Math.max(0,Number(item.reviewCorrectCount)||0),
+    reviewWrongCount:Math.max(0,Number(item.reviewWrongCount)||0),
+    ts,
+    lastReviewTs:Math.max(0,Number(item.lastReviewTs)||ts),
+    lastReviewResult:item.lastReviewResult||null,
+  };
+}
+
 // State
 let state={
   tab:0, // 0=bank, 1=exam, 2=wrong
@@ -163,7 +187,7 @@ let state={
   bankIdx:0,
   bankAnswered:LS.get("bankAnswered",{}), // persisted
   bankStats:LS.get("bankStats",{}), // persisted: {attempts,correct}
-  wrongList:LS.get('wrong',[]), // [{type,idx,q,userAns,correctAns}]
+  wrongList:LS.get('wrong',[]).map(normalizeWrongItem), // [{type,idx,q,userAns,correctAns}]
   examActive:false,
   examId:null,
   examQuestions:[],
@@ -183,7 +207,70 @@ let state={
   examReviewData:null,
   wrongFilter:null,
   wrongPracticeList:[],
+  wrongSettings:normalizeWrongSettings(LS.get('wrongSettings',{})),
 };
+
+function persistWrongList(){LS.set('wrong',state.wrongList);}
+function persistWrongSettings(){LS.set('wrongSettings',state.wrongSettings);}
+function getWrongRemoveTarget(){return normalizeWrongSettings(state.wrongSettings).correctToRemove;}
+function getWrongRetentionLabel(v=getWrongRemoveTarget()){return v===0?'手动移除':`答对${v}次后自动移除`;}
+function getWrongProgressText(w){
+  const streak=Math.max(0,Number(w&&w.correctStreak)||0);
+  const target=getWrongRemoveTarget();
+  return target===0?`当前模式：手动移除 · 已累计答对${streak}次`:`掌握进度：已连续答对${streak}/${target}次`;
+}
+
+function getSaveData(){
+  return{
+    version:2,
+    exportedAt:Date.now(),
+    data:{
+      bankAnswered:state.bankAnswered,
+      bankStats:state.bankStats,
+      wrongList:state.wrongList.map(normalizeWrongItem),
+      examResults:state.examResults,
+      wrongSettings:normalizeWrongSettings(state.wrongSettings),
+    }
+  };
+}
+
+function applySaveData(payload){
+  const data=payload&&typeof payload==='object'&&payload.data&&typeof payload.data==='object'?payload.data:payload;
+  if(!data||typeof data!=='object')throw new Error('文件内容不是有效存档');
+  state.bankAnswered=data.bankAnswered&&typeof data.bankAnswered==='object'?data.bankAnswered:{};
+  state.bankStats=data.bankStats&&typeof data.bankStats==='object'?data.bankStats:{};
+  state.wrongList=Array.isArray(data.wrongList)?data.wrongList.map(normalizeWrongItem):[];
+  state.examResults=Array.isArray(data.examResults)?data.examResults:[];
+  state.wrongSettings=normalizeWrongSettings(data.wrongSettings||{});
+  state.examActive=false;
+  state.examId=null;
+  state.examQuestions=[];
+  state.examAnswers={};
+  state.examIdx=0;
+  state.examInstanceId=null;
+  state.examTimer=0;
+  if(state.examTimerRef)clearInterval(state.examTimerRef);
+  state.examTimerRef=null;
+  state.examMarked={};
+  state.examReview=false;
+  state.examReviewData=null;
+  state.wrongMode=false;
+  state.wrongIdx=0;
+  state.wrongAnswered={};
+  state.wrongPracticeList=[];
+  state.tab=2;
+  window._multiTemp={};
+  window._examMultiTemp={};
+  window._wrongMultiTemp={};
+  LS.set('bankAnswered',state.bankAnswered);
+  LS.set('bankStats',state.bankStats);
+  LS.set('examResults',state.examResults);
+  persistWrongList();
+  persistWrongSettings();
+}
+
+persistWrongList();
+persistWrongSettings();
 
 function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
@@ -221,19 +308,53 @@ function calcScore(questions,answers){
 
 function addWrong(q,userAns,qType,qIdx){
   const key=qType+'_'+qIdx;
-  const existing=state.wrongList.findIndex(w=>w.key===key);
-  if(existing>=0){
-    state.wrongList[existing].userAns=userAns;
-    state.wrongList[existing].count=(state.wrongList[existing].count||1)+1;
+  const existing=state.wrongList.find(w=>w.key===key);
+  if(existing){
+    existing.userAns=userAns;
+    existing.count=Math.max(1,Number(existing.count)||1)+1;
+    existing.reviewWrongCount=Math.max(0,Number(existing.reviewWrongCount)||0)+1;
+    existing.correctStreak=0;
+    existing.lastReviewResult='wrong';
+    existing.lastReviewTs=Date.now();
   }else{
-    state.wrongList.push({key,type:q.type,q:q.q,opts:q.opts,a:q.a,userAns,count:1,ts:Date.now()});
+    state.wrongList.push(normalizeWrongItem({
+      key,
+      type:q.type,
+      q:q.q,
+      opts:q.opts,
+      a:q.a,
+      userAns,
+      count:1,
+      correctStreak:0,
+      reviewCorrectCount:0,
+      reviewWrongCount:1,
+      ts:Date.now(),
+      lastReviewTs:Date.now(),
+      lastReviewResult:'wrong'
+    }));
   }
-  LS.set('wrong',state.wrongList);
+  persistWrongList();
 }
 
 function removeWrong(key){
-  state.wrongList=state.wrongList.filter(w=>w.key!==key);
-  LS.set('wrong',state.wrongList);
+  const item=state.wrongList.find(w=>w.key===key);
+  if(!item)return false;
+  item.reviewCorrectCount=Math.max(0,Number(item.reviewCorrectCount)||0)+1;
+  item.correctStreak=Math.max(0,Number(item.correctStreak)||0)+1;
+  item.lastReviewResult='correct';
+  item.lastReviewTs=Date.now();
+  const target=getWrongRemoveTarget();
+  if(target>0&&item.correctStreak>=target){
+    state.wrongList=state.wrongList.filter(w=>w.key!==key);
+    state.wrongPracticeList=state.wrongPracticeList.filter(k=>k!==key);
+    delete state.wrongAnswered[key];
+    if(window._wrongMultiTemp)delete window._wrongMultiTemp[key];
+    if(state.wrongIdx>=state.wrongPracticeList.length&&state.wrongIdx>0)state.wrongIdx--;
+    persistWrongList();
+    return true;
+  }
+  persistWrongList();
+  return false;
 }
 
 // Render
@@ -566,6 +687,20 @@ function renderWrong(){
   h+=`<div class="stat-card${f==='repeat'?' active-filter':''}" onclick="setWrongFilter('repeat')"><div class="stat-num" style="color:var(--green)">${repeatCount}</div><div class="stat-label">反复错(>2次)</div></div>`;
   h+=`</div>`;
 
+  h+=`<div class="card">`;
+  h+=`<div class="card-title">⚙️ 错题规则与存档</div>`;
+  h+=`<div style="font-size:13px;color:var(--sub);line-height:1.7;margin-bottom:10px">错题本会自动保存在当前浏览器，也可以像游戏存档一样导出成 JSON 文件，后面再导入恢复。</div>`;
+  h+=`<div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">答对几次后自动移出错题本</div>`;
+  h+=`<div class="type-filter">${[
+    {v:0,label:'手动移除'},
+    {v:2,label:'2次'},
+    {v:3,label:'3次'},
+    {v:5,label:'5次'}
+  ].map(opt=>`<button class="filter-btn${state.wrongSettings.correctToRemove===opt.v?' active':''}" onclick="setWrongRemoveTarget(${opt.v})">${opt.label}</button>`).join('')}</div>`;
+  h+=`<div style="font-size:12px;color:var(--sub);line-height:1.7">当前规则：<b style="color:var(--pri)">${getWrongRetentionLabel()}</b><br>自动存档键：<code>ai3_bankAnswered</code>、<code>ai3_bankStats</code>、<code>ai3_wrong</code>、<code>ai3_examResults</code>、<code>ai3_wrongSettings</code></div>`;
+  h+=`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"><button class="btn btn-out btn-sm" onclick="exportSave()">导出存档</button><button class="btn btn-out btn-sm" onclick="triggerImportSave()">导入存档</button><input id="saveImportInput" class="hidden" type="file" accept="application/json,.json" onchange="importSave(event)"></div>`;
+  h+=`</div>`;
+
   const filteredList=getFilteredWrongList();
 
   if(state.wrongList.length>0){
@@ -573,10 +708,11 @@ function renderWrong(){
     h+=`<div style="display:flex;gap:10px;margin-bottom:16px"><button class="btn btn-pri" style="flex:1" onclick="startWrongPractice()"${filteredList.length===0?' disabled style="flex:1;opacity:.5"':''}">🔄 ${btnLabel}</button><button class="btn btn-red btn-sm" onclick="clearWrong()">清空错题</button></div>`;
 
     filteredList.forEach((w,i)=>{
-      h+=`<div class="card"><div class="q-num"><span class="badge ${w.type==='j'?'badge-j':w.type==='s'?'badge-s':'badge-m'}">${w.type==='j'?'判断':w.type==='s'?'单选':'多选'}</span> <span style="color:var(--red);font-size:11px">错${w.count}次</span></div>`;
+      h+=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div style="min-width:0;flex:1"><div class="q-num"><span class="badge ${w.type==='j'?'badge-j':w.type==='s'?'badge-s':'badge-m'}">${w.type==='j'?'判断':w.type==='s'?'单选':'多选'}</span> <span style="color:var(--red);font-size:11px">错${w.count}次</span></div>`;
       h+=`<div class="q-text" style="font-size:13px">${w.q.substring(0,80)}${w.q.length>80?'...':''}</div>`;
       h+=`<div style="font-size:12px;color:var(--green)">正确答案：${w.type==='j'?(w.a?'√ 正确':'× 错误'):(Array.isArray(w.a)?w.a.join(', '):w.a)}</div>`;
-      h+=`</div>`;
+      h+=`<div style="font-size:12px;color:var(--sub);margin-top:8px">${getWrongProgressText(w)}</div></div>`;
+      h+=`<button class="btn btn-out btn-sm" style="white-space:nowrap" onclick="removeWrongManual('${w.key}')">移除</button></div></div>`;
     });
     if(filteredList.length===0){
       h+=`<div class="empty-state"><p>当前筛选无错题</p></div>`;
@@ -600,7 +736,7 @@ function renderWrongPractice(){
   const w=state.wrongList.find(ww=>ww.key===pList[realIdx]);
   if(!w){state.wrongMode=false;render();return'';}
   const idx=state.wrongIdx;
-  const aKey='w_'+idx;
+  const aKey=w.key;
   const answered=state.wrongAnswered[aKey]!==undefined;
   const userAns=state.wrongAnswered[aKey];
 
@@ -610,6 +746,7 @@ function renderWrongPractice(){
   h+=`<div class="card">`;
   h+=`<div class="q-num"><span class="badge ${w.type==='j'?'badge-j':w.type==='s'?'badge-s':'badge-m'}">${w.type==='j'?'判断':w.type==='s'?'单选':'多选'}</span> 错${w.count}次</div>`;
   h+=`<div class="q-text">${w.q}</div>`;
+  h+=`<div style="font-size:12px;color:var(--sub);margin-bottom:10px">${getWrongProgressText(w)}</div>`;
   
   if(w.type==='j'){
     h+=`<div class="judge-opts">`;
@@ -647,11 +784,12 @@ function renderWrongPractice(){
     const isCorrect=w.type==='j'?userAns===w.a:w.type==='m'?[...(userAns||[])].sort().join(',')===[...(w.a||[])].sort().join(','):userAns===w.a;
     const correctText=w.type==='j'?(w.a?'√ 正确':'× 错误'):(Array.isArray(w.a)?w.a.join(', '):w.a);
     if(isCorrect){
-      h+=`<div class="result-box correct">✅ 回答正确！${w.count>2?'（反复错题，保留在错题本中）':'本题已从错题本移除'}</div>`;
+      h+=`<div class="result-box correct">✅ 回答正确！${getWrongRemoveTarget()===0?`当前为手动移除模式，题目仍保留在错题本。`:`已累计答对${Math.max(0,Number(w.correctStreak)||0)}/${getWrongRemoveTarget()}次，达到阈值后才会自动移出错题本。`}</div>`;
     }else{
       h+=`<div class="result-box wrong">❌ 回答错误！正确答案：${correctText}</div>`;
     }
   }
+  h+=`<div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn btn-out btn-sm" onclick="removeWrongManual('${aKey}')">手动移出</button></div>`;
   h+=`</div>`;
   
   h+=`<div class="nav-btns">`;
@@ -971,29 +1109,76 @@ window.startWrongPractice=function(){
 
 window.setWrongFilter=function(f){state.wrongFilter=f;render();}
 window.exitWrongMode=function(){state.wrongMode=false;render();}
+window.setWrongRemoveTarget=function(v){
+  state.wrongSettings=normalizeWrongSettings({correctToRemove:v});
+  persistWrongSettings();
+  render();
+}
+
+window.exportSave=function(){
+  const payload=JSON.stringify(getSaveData(),null,2);
+  const blob=new Blob([payload],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const stamp=new Date().toISOString().slice(0,19).replace(/[T:]/g,'-');
+  a.href=url;
+  a.download=`ai3-save-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+window.triggerImportSave=function(){
+  const input=document.getElementById('saveImportInput');
+  if(input)input.click();
+}
+
+window.importSave=function(evt){
+  const file=evt.target&&evt.target.files&&evt.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const payload=JSON.parse(reader.result);
+      applySaveData(payload);
+      alert('存档导入成功，已恢复当前浏览器中的进度。');
+      render();
+    }catch(err){
+      alert('存档导入失败：'+(err&&err.message?err.message:'文件格式不正确'));
+    }finally{
+      evt.target.value='';
+    }
+  };
+  reader.readAsText(file,'utf-8');
+}
+
+window.removeWrongManual=function(key){
+  if(!confirm('确认手动从错题本移除这道题？'))return;
+  state.wrongList=state.wrongList.filter(w=>w.key!==key);
+  state.wrongPracticeList=state.wrongPracticeList.filter(k=>k!==key);
+  delete state.wrongAnswered[key];
+  if(window._wrongMultiTemp)delete window._wrongMultiTemp[key];
+  persistWrongList();
+  if(state.wrongIdx>=state.wrongPracticeList.length&&state.wrongIdx>0)state.wrongIdx--;
+  render();
+}
 
 window.wrongAnswer=function(aKey,val,type){
   state.wrongAnswered[aKey]=val;
-  const pList=state.wrongPracticeList;
-  const realIdx=state.wrongIdx%pList.length;
-  const w=state.wrongList.find(ww=>ww.key===pList[realIdx]);
+  const w=state.wrongList.find(ww=>ww.key===aKey);
   if(!w){render();return;}
-  const isCorrect=type==='j'?val===w.a:val===w.a;
+  const isCorrect=checkAnswer(w,val);
   if(isCorrect){
-    if(w.count>2){
-      // Keep in wrong list but remove from practice list
-      pList.splice(realIdx,1);
-    }else{
-      // Remove from wrong list entirely
-      const wIdx=state.wrongList.indexOf(w);
-      if(wIdx>=0)state.wrongList.splice(wIdx,1);
-      pList.splice(realIdx,1);
-    }
-    LS.set('wrong',state.wrongList);
-    if(state.wrongIdx>=pList.length&&state.wrongIdx>0)state.wrongIdx--;
+    removeWrong(aKey);
   }else{
-    w.count=(w.count||1)+1;
-    LS.set('wrong',state.wrongList);
+    w.userAns=val;
+    w.count=Math.max(1,Number(w.count)||1)+1;
+    w.reviewWrongCount=Math.max(0,Number(w.reviewWrongCount)||0)+1;
+    w.correctStreak=0;
+    w.lastReviewResult='wrong';
+    w.lastReviewTs=Date.now();
+    persistWrongList();
   }
   render();
 }
@@ -1010,24 +1195,19 @@ window.wrongToggleMulti=function(aKey,val){
 window.wrongConfirmMulti=function(aKey){
   const sel=[...(window._wrongMultiTemp[aKey]||[])].sort();
   state.wrongAnswered[aKey]=sel;
-  const pList=state.wrongPracticeList;
-  const realIdx=state.wrongIdx%pList.length;
-  const w=state.wrongList.find(ww=>ww.key===pList[realIdx]);
+  const w=state.wrongList.find(ww=>ww.key===aKey);
   if(!w){delete window._wrongMultiTemp[aKey];render();return;}
   const isCorrect=[...sel].join(',')===[...(w.a||[])].sort().join(',');
   if(isCorrect){
-    if(w.count>2){
-      pList.splice(realIdx,1);
-    }else{
-      const wIdx=state.wrongList.indexOf(w);
-      if(wIdx>=0)state.wrongList.splice(wIdx,1);
-      pList.splice(realIdx,1);
-    }
-    LS.set('wrong',state.wrongList);
-    if(state.wrongIdx>=pList.length&&state.wrongIdx>0)state.wrongIdx--;
+    removeWrong(aKey);
   }else{
-    w.count=(w.count||1)+1;
-    LS.set('wrong',state.wrongList);
+    w.userAns=sel;
+    w.count=Math.max(1,Number(w.count)||1)+1;
+    w.reviewWrongCount=Math.max(0,Number(w.reviewWrongCount)||0)+1;
+    w.correctStreak=0;
+    w.lastReviewResult='wrong';
+    w.lastReviewTs=Date.now();
+    persistWrongList();
   }
   delete window._wrongMultiTemp[aKey];
   render();
@@ -1042,7 +1222,11 @@ window.wrongNav=function(dir){
 window.clearWrong=function(){
   if(!confirm('确认清空所有错题记录？'))return;
   state.wrongList=[];
-  LS.set('wrong',[]);
+  state.wrongPracticeList=[];
+  state.wrongAnswered={};
+  state.wrongMode=false;
+  window._wrongMultiTemp={};
+  persistWrongList();
   render();
 }
 
