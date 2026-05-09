@@ -346,6 +346,10 @@ function removeWrong(key){
   const target=getWrongRemoveTarget();
   if(target>0&&item.correctStreak>=target){
     state.wrongList=state.wrongList.filter(w=>w.key!==key);
+    state.wrongPracticeList=state.wrongPracticeList.filter(k=>k!==key);
+    delete state.wrongAnswered[key];
+    if(window._wrongMultiTemp)delete window._wrongMultiTemp[key];
+    if(state.wrongIdx>=state.wrongPracticeList.length&&state.wrongIdx>0)state.wrongIdx--;
     persistWrongList();
     return true;
   }
