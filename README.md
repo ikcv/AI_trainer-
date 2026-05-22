@@ -122,6 +122,16 @@ The folder `人工智能训练师三级素材/操作题答案/` contains referen
 | 4.1.x（5题） | 培训大纲编写 | 学习目标填空答案 |
 | 4.2.x（5题） | 数据采集处理方案 | 填空答案 + 方案设计 |
 
+## 贡献与致谢 / Contributors and Acknowledgements
+
+感谢所有为本项目提供帮助的人。GitHub 的 Contributors 页面会根据提交作者账号和邮箱自动统计；OpenAI Codex 作为 AI 协作助手没有独立的 GitHub 账号，因此不会出现在自动统计列表中，但它参与了本项目的代码审查、错题本修复、PR 处理和 README 中英双语整理。
+
+Thanks to everyone who has helped improve this project. GitHub's Contributors page is generated automatically from commit authors and linked accounts. OpenAI Codex does not have an independent GitHub account, so it does not appear in that automatic list, but it assisted with code review, wrong-question notebook fixes, PR handling, and bilingual README updates.
+
+- @xxiao1127：项目整理、维护与答案校对 / Project organization, maintenance, and answer review
+- @hughware：错题本修复与手机友好版尝试 / Wrong-question notebook fix and mobile-friendly version proposal
+- Claude：早期辅助整理 / Early assistant-supported organization
+- OpenAI Codex：代码审查、维护修复、PR 处理与文档整理 / Code review, maintenance fixes, PR handling, and documentation updates
 ## 声明 / Notice
 
 - 来源 / Source: https://github.com/xxiao1127
