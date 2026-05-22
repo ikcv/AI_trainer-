@@ -1,60 +1,115 @@
-# 人工智能训练师（三级）备考资料
+# 人工智能训练师（三级）备考资料 / AI Trainer Level 3 Study Materials
 
-## 项目简介
+## 项目简介 / Overview
 
-本项目为"人工智能训练师"（职业编码：4-04-05-05）三级职业技能等级认定的备考资料合集。
-级别信息参考：国家职业技能标准4-04-05-05.pdf。
-资料来源：https://gjzs.sjtu.edu.cn （上海交通大学终身教育学院）。
+本项目整理了“人工智能训练师”（职业编码：4-04-05-05）三级职业技能等级认定的备考资料，包括理论题库、在线刷题系统、参考答案和操作技能资料。
 
-## 文件说明
+This repository collects study materials for the Level 3 certification of “Artificial Intelligence Trainer” (occupation code: 4-04-05-05), including theory question banks, an offline quiz system, reference answers, and practical-skill materials.
 
-| 文件/文件夹 | 说明 |
-|-------------|------|
-| 4-04-05-05_3_20250701.zip | 人工智能训练师（三级）职业技能等级认定指导手册 |
-| 人工智能训练师三级题库/ | 指导手册解压后的题库文件（第0-6部分） |
-| 人工智能训练师三级题库-v1.md | 理论知识题库的 Markdown 版本（判断300题 + 单选300题 + 多选300题） |
-| 人工智能训练师三级刷题系统_v1.html | 理论知识在线刷题系统（详见下方使用说明） |
-| 人工智能训练师三级理论答案.xlsx | 理论知识参考答案（3个sheet：判断/单选/多选） |
-| 人工智能训练师三级素材/ | 操作技能考试所需上网素材、模拟界面及操作题答案 |
-| 人工智能训练师三级素材/操作题答案/ | 40道操作技能题的参考答案与解析（详见下方说明） |
-| 个人承诺书.zip | 报名所需的个人承诺书模板 |
-| 国家职业技能标准4-04-05-05.pdf | 人工智能训练师国家职业技能标准全文 |
+级别信息参考：`国家职业技能标准4-04-05-05.pdf`。资料来源：https://gjzs.sjtu.edu.cn （上海交通大学终身教育学院）。
 
-**注意：** 官方未提供答案，本项目中的答案均为个人理解整理，仅供参考。
+Reference standard: `国家职业技能标准4-04-05-05.pdf`. Source materials are from https://gjzs.sjtu.edu.cn (School of Lifelong Education, Shanghai Jiao Tong University).
 
-## 刷题系统使用说明（人工智能训练师三级刷题系统_v1.html）
+**注意：官方未提供答案，本项目中的答案均为个人理解整理，仅供学习交流参考。**
 
-### 打开方式
-直接用浏览器（推荐 Chrome / Edge）打开该 HTML 文件即可，无需安装、无需联网、无需登录。
+**Note: Official answers are not provided. The answers in this repository are personal study notes and are for learning and discussion only.**
 
-### 功能模块
-1. **题库刷题**：包含判断题300题、单选题300题、多选题300题，按题型分组浏览，支持翻页，每题实时判对错并显示正确答案。
-2. **模拟考试**：含官方模拟试卷和随机组卷两种模式，题型分布为判断40题 + 单选140题 + 多选10题，限时90分钟，满分100分，60分及格。考试支持标记题目、三段式答题卡、交卷后可保存完整试卷用于回顾。
-3. **错题本**：自动收录做错的题目，支持按题型和反复错筛选，可针对筛选结果专项练习。错题练习状态按题目本身存储，不会再出现“上一题移除后下一题继承选项”的串题问题；同时支持自定义“答对几次后自动移出错题本”，也可以切换为手动移除。
-4. **本地存档**：支持把当前浏览器中的做题进度、错题本、考试记录导出成 JSON 存档，也支持之后导入恢复，便于像游戏存档一样备份和迁移。
+## 文件说明 / Files
 
-### 数据存储
-所有做题进度、考试记录、错题本数据均保存在浏览器本地存储（localStorage）中：
-- 同一浏览器下次打开自动恢复进度
-- 清除浏览器数据会导致记录丢失
-- 不同浏览器之间数据不互通
+| 文件/文件夹 | 中文说明 | English Description |
+|-------------|----------|---------------------|
+| `4-04-05-05_3_20250701.zip` | 人工智能训练师（三级）职业技能等级认定指导手册 | Official guidance package for the Level 3 certification |
+| `人工智能训练师三级题库/` | 指导手册解压后的题库文件（第0-6部分） | Extracted question-bank files from the guidance package |
+| `人工智能训练师三级题库-v1.md` | 理论知识题库 Markdown 版本（判断300题 + 单选300题 + 多选300题） | Markdown version of the theory question bank: 300 true/false, 300 single-choice, and 300 multiple-choice questions |
+| `人工智能训练师三级刷题系统_v1.html` | 理论知识在线刷题系统，详见下方说明 | Offline browser-based quiz system for theory practice |
+| `人工智能训练师三级理论答案.xlsx` | 理论知识参考答案（3个 sheet：判断/单选/多选） | Reference answers for theory questions, with separate sheets for true/false, single-choice, and multiple-choice |
+| `人工智能训练师三级素材/` | 操作技能考试所需上网素材、模拟界面及操作题答案 | Practical-skill exam materials, mock interfaces, and reference answers |
+| `人工智能训练师三级素材/操作题答案/` | 40道操作技能题的参考答案与解析 | Reference answers and explanations for 40 practical-skill tasks |
+| `个人承诺书.zip` | 报名所需的个人承诺书模板 | Personal commitment letter template for registration |
+| `国家职业技能标准4-04-05-05.pdf` | 人工智能训练师国家职业技能标准全文 | Full national occupational skill standard |
 
-主要 localStorage 键如下：
-- `ai3_bankAnswered`：题库页每题是否已答及用户答案
-- `ai3_bankStats`：题库页每题的作答次数与正确次数
-- `ai3_wrong`：错题本条目、累计错题次数、连续答对次数等
-- `ai3_examResults`：模拟考试记录与可选的整卷回顾数据
-- `ai3_wrongSettings`：错题移除规则（如答对几次后自动移除）
+## 刷题系统 / Quiz System
+
+主文件：`人工智能训练师三级刷题系统_v1.html`
+
+Main file: `人工智能训练师三级刷题系统_v1.html`
+
+### 打开方式 / How To Open
+
+直接用浏览器打开该 HTML 文件即可，推荐 Chrome 或 Edge。无需安装、无需联网、无需登录。
+
+Open the HTML file directly in a browser. Chrome or Edge is recommended. No installation, internet connection, or login is required.
+
+### 功能模块 / Features
+
+1. **题库刷题**：包含判断题300题、单选题300题、多选题300题。支持按题型浏览、翻页、实时判对错并显示正确答案。
+
+   **Question-bank practice**: Includes 300 true/false, 300 single-choice, and 300 multiple-choice questions. Supports browsing by type, page navigation, instant grading, and answer display.
+
+2. **模拟考试**：包含官方模拟试卷和随机组卷两种模式。题型分布为判断40题 + 单选140题 + 多选10题，限时90分钟，满分100分，60分及格。
+
+   **Mock exams**: Includes official mock-paper mode and random-paper mode. The paper structure is 40 true/false + 140 single-choice + 10 multiple-choice questions, with a 90-minute time limit, 100 total points, and 60 points to pass.
+
+3. **错题本**：自动收录做错的题目，支持按题型和反复错筛选，也支持针对筛选结果专项练习。错题练习状态按题目本身存储，避免移除错题后串题。
+
+   **Wrong-question notebook**: Automatically records incorrect answers, supports filtering by question type and repeated mistakes, and allows focused practice. Practice state is stored by question key to avoid state carry-over after removing a wrong question.
+
+4. **本地存档**：支持把做题进度、错题本和考试记录导出为 JSON 存档，也支持之后导入恢复。
+
+   **Local save files**: Supports exporting progress, wrong questions, and exam records as a JSON save file, and importing it later for recovery or migration.
+
+### 数据存储 / Data Storage
+
+所有做题进度、考试记录和错题本数据都保存在浏览器本地存储（localStorage）中：
+
+All progress, exam records, and wrong-question data are stored in the browser’s localStorage:
+
+- 同一浏览器下次打开会自动恢复进度。  
+  Progress is restored automatically when the same browser opens the file again.
+- 清除浏览器数据会导致记录丢失。  
+  Clearing browser data will remove saved records.
+- 不同浏览器之间数据默认不互通。  
+  Different browsers do not share data by default.
+
+主要 localStorage 键 / Main localStorage keys:
+
+- `ai3_bankAnswered`：题库页每题是否已答及用户答案 / Per-question answer state in practice mode
+- `ai3_bankStats`：题库页每题的作答次数与正确次数 / Attempt and correctness statistics
+- `ai3_wrong`：错题本条目、累计错题次数、连续答对次数等 / Wrong-question entries and review counters
+- `ai3_examResults`：模拟考试记录与可选的整卷回顾数据 / Mock-exam records and optional full-paper review data
+- `ai3_wrongSettings`：错题移除规则 / Wrong-question removal settings
 
 若需跨浏览器或跨设备保存，请使用刷题系统内的“导出存档 / 导入存档”按钮。
 
-### 进度管理
-- 题库页支持"重置本页进度"和"重置本题型进度"
-- 考试记录支持逐条删除和完整试卷回顾
+To move data across browsers or devices, use the “Export Save / Import Save” buttons in the quiz system.
 
-## 操作技能参考答案（人工智能训练师三级素材/操作题答案/）
+### 进度管理 / Progress Management
 
-40道操作技能题的参考答案，覆盖全部4大类8小类：
+- 题库页支持“重置本页进度”和“重置本题型进度”。  
+  The practice page supports resetting the current page or the current question type.
+- 考试记录支持逐条删除和完整试卷回顾。  
+  Exam records can be deleted individually and reviewed as full papers.
+
+## 手机友好版社区贡献 / Mobile-Friendly Community Contribution
+
+感谢 @hughware 提交的手机友好版尝试：PR #2 “添加了一个适合手机小屏幕使用的版本”。
+
+Thanks to @hughware for proposing a mobile-friendly version in PR #2, “添加了一个适合手机小屏幕使用的版本”.
+
+该版本目前没有合入主线。主要原因是本项目当前以电脑端刷题和电脑考试场景为主，现有主线版本已经覆盖判断、单选、多选和完整模拟考试流程。手机友好版对小屏幕体验很有帮助，但目前功能覆盖和主线版本并不完全一致。
+
+This version has not been merged into the main branch. The current project focuses on desktop-based practice and exam preparation, and the main quiz system already covers true/false, single-choice, multiple-choice, and the full mock-exam workflow. The mobile-friendly version is useful for small screens, but its feature coverage is not fully aligned with the main version yet.
+
+有手机端需求的用户仍可查看该贡献：  
+Users who need a mobile-oriented version can still find the contribution here:
+
+https://github.com/xxiao1127/AI_trainer-/pull/2
+
+## 操作技能参考答案 / Practical-Skill Reference Answers
+
+`人工智能训练师三级素材/操作题答案/` 中包含 40 道操作技能题的参考答案，覆盖全部 4 大类 8 小类。
+
+The folder `人工智能训练师三级素材/操作题答案/` contains reference answers for 40 practical-skill tasks, covering all 4 major categories and 8 subcategories.
 
 | 类别 | 题型 | 答案内容 |
 |------|------|----------|
@@ -67,9 +122,11 @@
 | 4.1.x（5题） | 培训大纲编写 | 学习目标填空答案 |
 | 4.2.x（5题） | 数据采集处理方案 | 填空答案 + 方案设计 |
 
-## 声明
+## 声明 / Notice
 
-- 来源：https://github.com/xxiao1127
-- 本资料全部开源免费，答案仅为个人理解，仅供学习交流参考。
-- 禁止任何形式的商用、倒卖或未经授权的转载，盗用必究。
-- 联系作者：shellyx060@gmail.com
+- 来源 / Source: https://github.com/xxiao1127
+- 本资料全部开源免费，答案仅为个人理解，仅供学习交流参考。  
+  These materials are open and free. Answers reflect personal understanding and are for learning and discussion only.
+- 禁止任何形式的商用、倒卖或未经授权的转载。  
+  Commercial resale or unauthorized redistribution is not allowed.
+- 联系作者 / Contact: shellyx060@gmail.com
